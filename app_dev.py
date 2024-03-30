@@ -17,15 +17,29 @@ class MainApp:
     def __init__(self, master=None):
 
         self.master = master
-        self.output_format_var = tk.BooleanVar(value=True)
-        self.quality_var = tk.BooleanVar(value=True)
-        self.meta_data_var = tk.BooleanVar(value=True)
-        self.album_art_var = tk.BooleanVar(value=False)
-        self.append_to_albumartist_var = tk.BooleanVar(value=False)
-        self.sacad_var = tk.BooleanVar(value=False)
-        self.strip_id3_var = tk.BooleanVar(value=False)
-        self.resolution = tk.StringVar(value="1000")
 
+        # Options
+        self.no_transcode_var = tk.BooleanVar(value=True)
+        self.output_format_var = tk.BooleanVar(value=True)
+        self.random_sleep_var = tk.BooleanVar(value=True)
+
+        self.restrict_filename_var = tk.BooleanVar(value=True)
+        self.no_mtime_var = tk.BooleanVar(value=True)
+
+        self.strip_id3_var = tk.BooleanVar(value=False)
+        self.append_to_albumartist_var = tk.BooleanVar(value=False)
+        self.meta_data_var = tk.BooleanVar(value=True)
+        #Post Processing
+        self.use_youtube_var = tk.BooleanVar(value=False)
+        self.yt_embed_albumart_var = tk.BooleanVar(value=False)
+        self.yt_extract_albumart_var = tk.BooleanVar(value=False)
+
+        self.use_sacad_var = tk.BooleanVar(value=False)
+        self.sacad_dl_albumart = tk.BooleanVar(value=False)
+        self.sacad_embed_albumart = tk.BooleanVar(value=False)
+
+        self.album_art_var = tk.BooleanVar(value=False)
+        self.resolution = tk.StringVar(value="1000")
 
         mainwindow = ttk.Frame(master)
         mainwindow.configure(height=750, width=650)
@@ -70,10 +84,7 @@ class MainApp:
         create_spacer(links_frame, height=20, width=200, side="top")
 
         links_label = ttk.Label(links_frame)
-        links_label.configure(
-            font="TkCaptionFont",
-            justify="right",
-            text='Links File:')
+        links_label.configure(font="TkCaptionFont", justify="right", text='Links File:')
         links_label.pack(anchor="w", padx=18, side="top")
         links_container = ttk.Frame(links_frame)
         links_container.configure(height=100,width=200)
@@ -94,13 +105,7 @@ class MainApp:
 
         # Cookies Input
         self.cookies_entry = ttk.Entry(cookies_container)
-        self.cookies_entry.pack(
-            anchor="w",
-            expand=True,
-            fill="x",
-            padx=0,
-            pady=10,
-            side="left")
+        self.cookies_entry.pack(anchor="w", expand=True, fill="x", padx=0, pady=10, side="left")
         default_cookies_path = "/home/init/Downloads/cookies.txt"
         self.cookies_entry.insert(0, default_cookies_path)
         self.cookies_browse = ttk.Button(cookies_container)
@@ -115,21 +120,12 @@ class MainApp:
         output_dir_container.configure(width=200)
         create_spacer(output_dir_container)
         output_dir_label = ttk.Label(output_dir_container)
-        output_dir_label.configure(
-            font="TkCaptionFont",
-            justify="right",
-            text='Output Directory:')
+        output_dir_label.configure(font="TkCaptionFont",justify="right",text='Output Directory:')
         output_dir_label.pack(anchor="w", expand=False, fill="x", side="top")
         create_spacer(links_frame, height=20, width=200, side="top")
 
         self.output_dir_entry = ttk.Entry(output_dir_container)
-        self.output_dir_entry.pack(
-            anchor="w",
-            expand=True,
-            fill="x",
-            padx=0,
-            pady=10,
-            side="left")
+        self.output_dir_entry.pack(anchor="w", expand=True, fill="x", padx=0, pady=10, side="left")
         self.output_dir_browse = ttk.Button(output_dir_container)
         self.output_dir_browse.configure(text='Browse', command=self.browse_output_path)
         self.output_dir_browse.pack(anchor="e", expand=False, ipadx=20, padx=15, side="right")
@@ -140,172 +136,268 @@ class MainApp:
         links_options_notebook.add(paths_frame, text='Paths')
         links_options_notebook.pack(anchor="w", fill="x", side="left")
         links_options_pane.add(links_options_notebook)
-        links_options_pane.pack(
-            expand=False,
-            fill="both",
-            ipadx=10,
-            ipady=10,
-            padx=15,
-            pady=10,
-            side="top")
+        links_options_pane.pack(expand=False, fill="both", ipadx=10, ipady=10, padx=15, pady=10, side="top")
 
-        all_options_pane = ttk.Panedwindow(mainwindow, orient="horizontal")
-        all_options_notebook = ttk.Notebook(all_options_pane)
-        all_options_notebook.configure(height=170, width=200)
+        settings_pane = ttk.Panedwindow(mainwindow, orient="horizontal")
+        settings_notebook = ttk.Notebook(settings_pane)
+        settings_notebook.configure(height=190, width=200)
+        options_container = ttk.Frame(settings_notebook)
+        options_container.configure(borderwidth=1, height=110, width=400)
 
-        frame38 = ttk.Frame(all_options_notebook)
-        frame38.configure(borderwidth=1, height=100, width=400)
+        simple_frame = ttk.Frame(options_container)
+        simple_frame.configure(height=110)
 
-        frame41 = ttk.Frame(frame38)
-        frame41.configure(height=20, width=200)
-        frame41.pack(anchor="w", fill="both", padx=15, side="top")
+        simple_label = ttk.Label(simple_frame)
+        simple_label.configure(font="TkCaptionFont", text='Simple')
+        simple_label.pack(anchor="n", fill="x", side="top")
 
-        label10 = ttk.Label(frame38)
-        label10.configure(font="TkCaptionFont",justify="right",text='Custom Options:')
-        label10.pack(anchor="nw", padx=18, side="top")
+        simple_separator = ttk.Separator(simple_frame)
+        simple_separator.configure(orient="horizontal")
+        simple_separator.pack(anchor="n", expand=False, fill="x", pady=10, side="top")
 
-        frame42 = ttk.Frame(frame38)
-        frame42.configure(height=110)
-        check_state = tk.IntVar(value=0)
-        # Quality Check
-        checkbutton1 = ttk.Checkbutton(frame42, style="Switch.TCheckbutton")
-        checkbutton1.configure(state="normal", text='Best Quality', variable=self.quality_var)
-        checkbutton1.pack(anchor="w", side="top")
+        simple_checkbox_container = ttk.Frame(simple_frame)
+        simple_checkbox_container.configure(height=200, width=200)
 
-        # Output Check
-        checkbutton2 = ttk.Checkbutton(frame42, style="Switch.TCheckbutton")
-        checkbutton2.configure(text='Format Output', variable=self.output_format_var)
-        checkbutton2.pack(anchor="w", side="top")
+        no_transcode_checkbox = ttk.Checkbutton(simple_checkbox_container)
+        no_transcode_checkbox.configure(text='No Audio transcode', variable=self.no_transcode_var)
+        no_transcode_checkbox.pack(anchor="n", fill="x", side="top")
 
-        # Embed Metadata
-        checkbutton3 = ttk.Checkbutton(frame42, style="Switch.TCheckbutton")
-        checkbutton3.configure(text='Embed Metadata', variable=self.meta_data_var)
-        checkbutton3.pack(anchor="w", side="top")
+        format_output_checkbox = ttk.Checkbutton(simple_checkbox_container)
+        format_output_checkbox.configure(compound="left", text='Format Output')
+        format_output_checkbox.pack(anchor="n", fill="x", side="top")
+        randon_sleep_checkbox = ttk.Checkbutton(simple_checkbox_container)
+        randon_sleep_checkbox.configure(compound="right", text='Random Sleep Delay')
+        randon_sleep_checkbox.pack(anchor="n", pady=5, side="top")
 
-        frame42.pack(anchor="nw", padx=18, pady=15, side="left")
+        simple_checkbox_container.pack(anchor="n", side="top")
+        simple_frame.pack(anchor="nw", fill="x", padx=18, pady=10, side="left")
 
-        frame51 = ttk.Frame(frame38)
-        frame51.configure(width=200)
-        frame51.pack(anchor="w", fill="both", padx=15, side="top")
+        advanced_options_frame = ttk.Frame(options_container)
+        advanced_options_frame.configure(height=200)
 
-        frame38.pack(anchor="w", side="left")
+        advanced_label = ttk.Label(advanced_options_frame)
+        advanced_label.configure(font="TkCaptionFont", text='Advanced')
+        advanced_label.pack(anchor="n", fill="x", side="top")
 
-        all_options_notebook.add(frame38, text='Options')
-        frame43 = ttk.Frame(all_options_notebook)
+        advanced_label = ttk.Separator(advanced_options_frame)
+        advanced_label.configure(orient="horizontal")
+        advanced_label.pack(anchor="n", expand=False, fill="x", pady=10, side="top")
 
-        frame44 = ttk.Frame(frame43)
-        frame44.configure(borderwidth=2, width=200)
-        frame45 = ttk.Frame(frame44)
-        frame45.configure(width=200)
-        frame45.pack(anchor="w", expand=True, fill="x", side="top")
-        label12 = ttk.Label(frame44)
-        label12.configure(
-            font="TkCaptionFont",
-            justify="right",
-            text='Arguments:')
-        label12.pack(anchor="w", expand=False, fill="x", side="top")
+        advanced_frame1 = ttk.Frame(advanced_options_frame)
+        advanced_frame1.configure(height=100)
 
-        # Custom Args
-        self.entry14 = ttk.Entry(frame44)
-        self.entry14.pack(
-            anchor="w",
-            expand=True,
-            fill="x",
-            padx=0,
-            pady=10,
-            side="left")
-        frame44.pack(anchor="w", expand=True, fill="x", padx=15, side="left")
-        frame43.pack(anchor="n", side="top")
-        all_options_notebook.add(frame43, text='Custom Args')
-        frame46 = ttk.Frame(all_options_notebook)
-        frame46.configure(borderwidth=1, width=400)
-        frame53 = ttk.Frame(frame46)
-        frame53.configure(height=20, width=200)
-        frame53.pack(anchor="w", fill="both", padx=15, side="top")
-        frame48 = ttk.Frame(frame46)
-        frame48.configure(width=200)
+        restirct_filenames_checkbox = ttk.Checkbutton(advanced_frame1)
+        restirct_filenames_checkbox.configure(text='Restrict Filenames')
+        restirct_filenames_checkbox.pack(anchor="w", expand=False, fill="both", side="top")
 
+        no_mtime_checkbox = ttk.Checkbutton(advanced_frame1)
+        no_mtime_checkbox.configure(text='Dont set mtime')
+        no_mtime_checkbox.pack(anchor="w", expand=False, fill="both", side="top")
 
-        self.entry17 = ttk.Entry(frame48, textvariable=self.resolution)
-        self.entry17.configure(justify="right", width=10)
-        self.entry17.pack(expand=True, fill="x", padx=15, side="right")
+        num_threads_label = ttk.Label(advanced_frame1)
+        num_threads_label.configure(takefocus=True, text='Num Threads: ')
+        num_threads_label.pack(anchor="w", fill="x", ipady=4, padx=5, side="left")
 
-        # Sacad Check
-        checkbutton4 = ttk.Checkbutton(frame48, style="Switch.TCheckbutton")
-        checkbutton4.configure(
-            takefocus=False,
-            text='Update Covers with Sacad using resolution:', variable=self.sacad_var)
-        checkbutton4.pack(anchor="w", side="top")
-        frame48.pack(anchor="w", padx=18, side="top")
-        frame50 = ttk.Frame(frame46)
-        frame50.configure(width=200)
-        frame56 = ttk.Frame(frame50)
-        frame56.configure(height=110)
+        num_threads_entry = ttk.Entry(advanced_frame1)
+        num_threads_entry.configure(validate="key", width=5)
+        num_threads_entry.pack(anchor="e", side="right")
 
-        # Album Art Check
-        checkbutton5 = ttk.Checkbutton(frame56, style="Switch.TCheckbutton")
-        checkbutton5.configure(text='Embed Album Art', variable=self.album_art_var)
-        checkbutton5.pack(anchor="w", expand=True, fill="x", side="top")
+        advanced_frame1.pack(anchor="n", fill="x", side="top")
 
-        # Strip Unwanted ID3 Tags
-        checkbutton6 = ttk.Checkbutton(frame56, style="Switch.TCheckbutton")
-        checkbutton6.configure(text='Clean ID3 Tags', variable=self.strip_id3_var)
-        checkbutton6.pack(anchor="w", expand=False, side="top")
+        advanced_frame2 = ttk.Frame(advanced_options_frame)
+        advanced_frame2.configure(height=200, width=200)
 
-        # Artist > AlbumArtist
-        checkbutton7 = ttk.Checkbutton(frame56, style="Switch.TCheckbutton")
-        checkbutton7.configure(text='Artist > AlbumArtist', variable=self.append_to_albumartist_var)
-        checkbutton7.pack(anchor="w", expand=True, fill="x", side="top")
-        frame56.pack(anchor="n", padx=18, pady=10, side="left")
-        frame50.pack(anchor="w", expand=True, fill="x", side="top")
-        frame46.pack(anchor="w", side="left")
+        max_rate_label = ttk.Label(advanced_frame2)
+        max_rate_label.configure(justify="right", text='Max Rate: ')
+        max_rate_label.pack(anchor="w", fill="x", ipady=4, padx=5, pady=5, side="left")
 
-        all_options_notebook.add(frame46, text='Post Processing')
-        all_options_notebook.pack(anchor="w", fill="x", side="left")
-        all_options_pane.add(all_options_notebook)
-        all_options_pane.pack(
-            anchor="center",
-            expand=False,
-            fill="both",
-            ipadx=10,
-            ipady=10,
-            padx=15,
-            pady=10,
-            side="top")
-        button15 = ttk.Button(mainwindow)
+        max_rate_entry = ttk.Entry(advanced_frame2)
+        max_rate_entry.configure(width=5)
+        max_rate_entry.pack(anchor="e", pady=5, side="right")
+
+        advanced_frame2.pack(anchor="w", fill="x", side="top")
+        advanced_options_frame.pack(anchor="n", fill="both", padx=10, pady=10, side="left")
+
+        tag_options_frame = ttk.Frame(options_container)
+        tag_options_frame.configure(height=100)
+
+        tag_options_label = ttk.Label(tag_options_frame)
+        tag_options_label.configure(font="TkCaptionFont", text='Tag Options')
+        tag_options_label.pack(anchor="n", fill="x", side="top")
+
+        tag_options_separator = ttk.Separator(tag_options_frame)
+        tag_options_separator.configure(orient="horizontal")
+        tag_options_separator.pack(anchor="n", expand=False, fill="x", pady=10, side="top")
+
+        tag_options_container = ttk.Frame(tag_options_frame)
+        tag_options_container.configure(height=110)
+
+        clean_id3_checkbox = ttk.Checkbutton(tag_options_container)
+        clean_id3_checkbox.configure(text='Clean ID3 Tags')
+        clean_id3_checkbox.pack(anchor="w", expand=False, fill="both", side="top")
+
+        artist_albumartist_checkbox = ttk.Checkbutton(tag_options_container)
+        artist_albumartist_checkbox.configure(text='Artist > AlbumArtist')
+        artist_albumartist_checkbox.pack(anchor="n", fill="x", side="top")
+
+        embed_metadata_checkbox = ttk.Checkbutton(tag_options_container)
+        embed_metadata_checkbox.configure(text='Embed Metadata')
+        embed_metadata_checkbox.pack(anchor="w", side="top")
+
+        tag_options_container.pack(anchor="n", expand=True, fill="both", side="left")
+        tag_options_frame.pack(anchor="e", expand=True, fill="both", padx=10, pady=10, side="left")
+
+        options_container.pack(anchor="w", side="left")
+        settings_notebook.add(options_container, text='Options')
+
+        post_processing_container = ttk.Frame(settings_notebook)
+        post_processing_container.configure(borderwidth=1, width=600)
+
+        use_youtube_container = ttk.Frame(post_processing_container)
+        use_youtube_container.configure(height=100, width=300)
+
+        use_youtube_checkbox = ttk.Checkbutton(use_youtube_container)
+        use_youtube_checkbox.configure(text='Use Youtube For Covers')
+        use_youtube_checkbox.pack(anchor="w", side="top")
+
+        use_youtube_separator = ttk.Separator(use_youtube_container)
+        use_youtube_separator.configure(orient="horizontal")
+        use_youtube_separator.pack(anchor="n", fill="x", padx=10, pady=10, side="top")
+
+        use_youtube_frame = ttk.Frame(use_youtube_container)
+        use_youtube_frame.configure(height=200)
+
+        yt_embed_albumart_checkbox = ttk.Checkbutton(use_youtube_frame)
+        yt_embed_albumart_checkbox.configure(takefocus=False, text='Embed AlbumArt')
+        yt_embed_albumart_checkbox.pack(anchor="w", fill="x", side="top")
+
+        yt_extract_albumart_checkbox = ttk.Checkbutton(use_youtube_frame)
+        yt_extract_albumart_checkbox.configure(text='Extract AlbumArt')
+        yt_extract_albumart_checkbox.pack(anchor="w", fill="x", side="top")
+
+        yt_albumart_name_label = ttk.Label(use_youtube_frame)
+        yt_albumart_name_label.configure(text='Name:')
+        yt_albumart_name_label.pack(anchor="n", ipady=4, pady=5, side="left")
+
+        yt_albumart_name_entry = ttk.Entry(use_youtube_frame)
+        yt_albumart_name_entry.configure(justify="right", width=10)
+        yt_albumart_name_entry.pack(anchor="n", padx=5, pady=5, side="left")
+
+        use_youtube_frame.pack(anchor="w", fill="both", side="top")
+        use_youtube_container.pack(anchor="n", expand=False, fill="both", padx=10, pady=10, side="left")
+
+        use_sacad_container = ttk.Frame(post_processing_container)
+        use_sacad_container.configure(height=200, width=300)
+
+        use_sacad_checkbox = ttk.Checkbutton(use_sacad_container)
+        use_sacad_checkbox.configure(text='Use Sacad For Covers')
+        use_sacad_checkbox.pack(anchor="w", side="top")
+
+        use_sacad_separator = ttk.Separator(use_sacad_container)
+        use_sacad_separator.configure(orient="horizontal")
+
+        use_sacad_separator.pack(anchor="n", expand=False, fill="x", padx=10, pady=10, side="top")
+
+        use_sacad_frame = ttk.Frame(use_sacad_container)
+        use_sacad_frame.configure(height=100)
+
+        sacad_frame_1 = ttk.Frame(use_sacad_frame)
+        sacad_frame_1.configure(height=200, width=200)
+
+        sacad_download_cover_checkbox = ttk.Checkbutton(sacad_frame_1)
+        sacad_download_cover_checkbox.configure(takefocus=False, text='Download Cover')
+        sacad_download_cover_checkbox.pack(anchor="n", expand=False, fill="x", side="top")
+
+        sacad_embed_cover_checkbox = ttk.Checkbutton(sacad_frame_1)
+        sacad_embed_cover_checkbox.configure(text='Embed Cover')
+        sacad_embed_cover_checkbox.pack(anchor="n", fill="x", side="top")
+
+        sacad_resolution_label = ttk.Label(sacad_frame_1)
+        sacad_resolution_label.configure(text='Resolution: ', width=10)
+        sacad_resolution_label.pack(anchor="nw", ipady=4, pady=5, side="left")
+        sacad_resolution_entry = ttk.Entry(sacad_frame_1)
+        sacad_resolution_entry.configure(justify="right", width=10)
+        sacad_resolution_entry.pack(anchor="nw", fill="x", padx=5, pady=5, side="left")
+
+        sacad_frame_1.pack(anchor="n", fill="x", side="left")
+
+        use_sacad_frame.pack(anchor="n", fill="x", side="top")
+        use_sacad_frame_2 = ttk.Frame(use_sacad_container)
+        use_sacad_frame_2.configure(height=200, width=200)
+
+        sacad_cover_name_label = ttk.Label(use_sacad_frame_2)
+        sacad_cover_name_label.configure(text='Name: ', width=10)
+        sacad_cover_name_label.pack(anchor="n", fill="x", ipady=4, side="left")
+
+        sacad_cover_name_entry = ttk.Entry(use_sacad_frame_2)
+        sacad_cover_name_entry.configure(justify="right", width=10)
+        sacad_cover_name_entry.pack(anchor="nw", expand=False, fill="x", padx=5, side="left")
+
+        use_sacad_frame_2.pack(anchor="s", fill="x", side="bottom")
+        use_sacad_frame_2.pack_propagate(0)
+        use_sacad_container.pack(anchor="n", expand=False, fill="both", padx=20, pady=10, side="left")
+
+        post_processing_container.pack(anchor="n", expand=True, fill="both", side="left")
+        settings_notebook.add(post_processing_container, text='Post Processing')
+
+        custom_args_container = ttk.Frame(settings_notebook)
+
+        custom_args_frame = ttk.Frame(custom_args_container)
+        custom_args_frame.configure(borderwidth=2, width=200)
+
+        custom_args_spacer = ttk.Frame(custom_args_frame)
+        custom_args_spacer.configure(width=200)
+        custom_args_spacer.pack(anchor="w", expand=True, fill="x", side="top")
+
+        custom_args_label = ttk.Label(custom_args_frame)
+        custom_args_label.configure(font="TkDefaultFont", justify="right", text='Enter custom command line arguments:')
+        custom_args_label.pack(anchor="w", expand=False, fill="x", padx=5, pady=20, side="top")
+
+        custom_args_entry = ttk.Entry(custom_args_frame)
+        custom_args_entry.pack(anchor="w", fill="both", padx=0, pady=10, side="top")
+
+        custom_args_frame.pack(anchor="w", expand=False, fill="x", padx=15, pady=18, side="top")
+        custom_args_container.pack(anchor="w", fill="both", side="top")
+
+        settings_notebook.add(custom_args_container, text='Custom Args')
+        settings_notebook.pack(anchor="w", fill="x", side="left")
+        settings_pane.add(settings_notebook)
+        settings_pane.pack(anchor="center", expand=False, fill="both", ipadx=10, ipady=10, padx=10, pady=10, side="top")
+
+        download_button = ttk.Button(mainwindow)
 
         # Download Button
 
-        button15.configure(
+        download_button.configure(
             text='Download Playlist',
             style='Accent.TButton',
             command=self.validate_and_start_download  # Adjusted to the new intermediary method
         )
 
-        button15.pack(anchor="w", expand=True, fill="x", padx=15, side="top")
+        download_button.pack(anchor="w", expand=True, fill="x", padx=15, side="top")
 
         # Configuration for the log display font
         mainwindow.tk.call("font", "create", "SunValleyLogFont", "-family", "Segoe UI Variable Small", "-size", -13)
 
-        frame27 = ttk.Frame(mainwindow)
-        frame27.configure(height=20, width=200)
+        output_log_container = ttk.Frame(mainwindow)
+        output_log_container.configure(height=20, width=200)
 
-        label4 = ttk.Label(frame27)
-        label4.configure(font="TkCaptionFont", text='Output Log:')
-        label4.pack(anchor="w", expand=True, fill="x", pady=15, side="top")
+        output_log_label = ttk.Label(output_log_container)
+        output_log_label.configure(font="TkCaptionFont", text='Output Log:')
+        output_log_label.pack(anchor="w", expand=True, fill="x", pady=15, side="top")
 
-        frame2 = ttk.Frame(frame27)
-        frame2.configure(height=10, width=200)
-        frame2.pack(anchor="w", expand=True, fill="x", side="left")
+        output_log_frame = ttk.Frame(output_log_container)
+        output_log_frame.configure(height=10, width=200)
+        output_log_frame.pack(anchor="w", expand=True, fill="x", side="left")
 
-        frame27.pack(anchor="n", expand=True, fill="x", padx=15, side="left")
+        output_log_container.pack(anchor="n", expand=True, fill="x", padx=15, side="left")
 
         # Create a Text widget for the log display
-        self.log_widget = Text(frame2, wrap="none", relief="ridge", font="SunValleyLogFont", padx=10, pady=15)
+        self.log_widget = Text(output_log_frame, wrap="none", relief="ridge", font="SunValleyLogFont", padx=10, pady=15)
         self.log_widget.pack(side="left", fill="both", expand=True)
 
         # Create a Scrollbar and attach it to the Text widget
-        self.scrollbar = ttk.Scrollbar(frame2, orient="vertical", command=self.log_widget.yview)
+        self.scrollbar = ttk.Scrollbar(output_log_frame, orient="vertical", command=self.log_widget.yview)
         self.log_widget.config(yscrollcommand=self.scrollbar.set)
         self.scrollbar.pack(side="right", fill="y")
 
@@ -350,12 +442,24 @@ class MainApp:
             url = url.strip()
             if url:
                 command = 'yt-dlp --progress --newline'
-                if options['best_quality']:
+                if options['no_transcode']:
                     command += ' -x'
+                if options['output_format']:
+                    command += f' -o "{output_path}%(playlist_title)s/%(playlist_autonumber)02d. %(title)s.%(ext)s"'
+                if options['random_sleep']:
+                    random_sleep_time = random.uniform(0.2, 2)
+                    command += f' --sleep-interval {random_sleep_time}'
+                if options['restrict_filenames']:
+                    command += ' --restrict-filenames'
+                if options['no_mtime']:
+                    command += ' --no-mtime'
+                if options['no_mtime']:
+                    command += ' --no-mtime'
+
                 cookies_path = options['cookies']
                 if cookies_path:
                     command += f' --cookies {shlex.quote(cookies_path)}'
-                command += f' -o "{output_path}%(playlist_title)s/%(playlist_autonumber)02d. %(title)s.%(ext)s"'
+
                 if options['meta_data']:
                     command += ' --add-metadata --embed-metadata --extract-audio --embed-thumbnail'
                     command += ' --parse-metadata "playlist_index:%(track_number)s"'
@@ -498,17 +602,31 @@ class MainApp:
 
     def get_options(self):
         return {
-            'best_quality': self.quality_var.get(),
             'cookies': self.cookies_entry.get(),
-            'output_format': self.output_format_var.get(),
-            'meta_data': self.meta_data_var.get(),
-            'album_art': self.album_art_var.get(),
-            'custom_args': self.entry14.get(),
             'output_path': self.output_dir_entry.get(),
+
+            'no_transcode': self.no_transcode_var.get(),
+            'output_format': self.output_format_var.get(),
+            'random_sleep': self.random_sleep_var.get(),
+
+            'restrict_filenames': self.restrict_filename_var.get(),
+            'no_mtime': self.no_mtime_var.get(),
+            #num_threads
+            #max_rate
+
             'strip_id3': self.strip_id3_var.get(),
             'append_to_albumartist': self.append_to_albumartist_var.get(),
-            'sacad': self.sacad_var.get(),
-            'resolution': self.resolution.get()
+            'meta_data': self.meta_data_var.get(),
+            'use_youtube': self.use_youtube_var.get(),
+            'use_yt_albumart': self.album_art_var.get(),
+            #'yt_albumart_name':
+
+            'use_sacad': self.use_sacad_var.get(),
+            'use_sacad_albumart': self.sacad_dl_albumart.get(),
+            'resolution': self.resolution.get(),
+
+            'custom_args': self.entry14.get(),
+
         }
     def update_log(self, message):
         cleaned_message = message.rstrip('\n').rstrip('\r') + "\n"
