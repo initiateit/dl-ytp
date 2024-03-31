@@ -10,7 +10,8 @@ from threading import Thread
 import svc_ttk
 from typing import Literal
 
-tags_to_remove = ['comment', 'description', 'synopsis', 'Long Description']
+list_tags_to_remove = ['comment', 'description', 'synopsis', 'Long Description']
+
 
 class MainApp:
 
@@ -29,7 +30,7 @@ class MainApp:
         self.strip_id3_var = tk.BooleanVar(value=False)
         self.append_to_albumartist_var = tk.BooleanVar(value=False)
         self.meta_data_var = tk.BooleanVar(value=True)
-        #Post Processing
+        # Post Processing
         self.use_youtube_var = tk.BooleanVar(value=False)
         self.yt_embed_albumart_var = tk.BooleanVar(value=False)
         self.yt_extract_albumart_var = tk.BooleanVar(value=False)
@@ -41,13 +42,18 @@ class MainApp:
         self.album_art_var = tk.BooleanVar(value=False)
         self.resolution = tk.StringVar(value="1000")
 
+        self.num_threads_var = tk.StringVar(value="1")
+        self.max_rate_var = tk.StringVar(value="1250000")
+
         mainwindow = ttk.Frame(master)
         mainwindow.configure(height=750, width=650)
 
         # Logo, Header
         self.main_frame = ttk.Frame(master)
         self.main_frame.configure(width=200)
+
         svc_ttk.set_theme("light")  # Starting with a light theme
+
         self.img_logo_light = tk.PhotoImage(file="logo_light.png")
         self.img_logo_dark = tk.PhotoImage(file="logo_dark.png")
         self.img_blurb_light = tk.PhotoImage(file="blurb_light.png")
@@ -78,49 +84,58 @@ class MainApp:
 
         links_options_pane = ttk.Panedwindow(mainwindow, orient="horizontal")
         links_options_notebook = ttk.Notebook(links_options_pane)
-        links_options_notebook.configure(height=190,width=200)
+        links_options_notebook.configure(height=190, width=200)
+
         links_frame = ttk.Frame(links_options_notebook)
         links_frame.configure(width=400)
+
         create_spacer(links_frame, height=20, width=200, side="top")
 
         links_label = ttk.Label(links_frame)
         links_label.configure(font="TkCaptionFont", justify="right", text='Links File:')
         links_label.pack(anchor="w", padx=18, side="top")
         links_container = ttk.Frame(links_frame)
-        links_container.configure(height=100,width=200)
+        links_container.configure(height=100, width=200)
 
         # Links File
         self.links_entry = ttk.Entry(links_container)
         self.links_entry.pack(anchor="w", expand=True, fill="x", padx=0, pady=10, side="left")
         default_links_path = "/home/init/Music/Youtube/yt-dl-gui/test.txt"
+
         self.links_entry.insert(0, default_links_path)
         self.links_browse = ttk.Button(links_container, text='Browse', command=self.browse_file)  # Changed command to self.browse_file
         self.links_browse.pack(anchor="e", expand=False, ipadx=20, padx=15, side="right")
         links_container.pack(anchor="w", fill="x", padx=15, side="top")
+
         cookies_label = ttk.Label(links_frame)
         cookies_label.configure(font="TkCaptionFont", text='Cookies File:')
         cookies_label.pack(anchor="w", ipady=5, padx=18, side="top")
         cookies_container = ttk.Frame(links_frame)
-        cookies_container.configure(height=200,width=200)
+        cookies_container.configure(height=200, width=200)
 
         # Cookies Input
         self.cookies_entry = ttk.Entry(cookies_container)
         self.cookies_entry.pack(anchor="w", expand=True, fill="x", padx=0, pady=10, side="left")
         default_cookies_path = "/home/init/Downloads/cookies.txt"
+
         self.cookies_entry.insert(0, default_cookies_path)
         self.cookies_browse = ttk.Button(cookies_container)
         self.cookies_browse.configure(text='Browse', command=self.browse_cookies_file)
         self.cookies_browse.pack(anchor="e", expand=False, ipadx=20, padx=15, side="right")
         cookies_container.pack(anchor="w", fill="both", padx=15, side="top")
+
         links_frame.pack(anchor="w", side="left")
         links_options_notebook.add(links_frame, text='Links')
         paths_frame = ttk.Frame(links_options_notebook)
+
         # Output Directory
         output_dir_container = ttk.Frame(paths_frame)
         output_dir_container.configure(width=200)
+
         create_spacer(output_dir_container)
+
         output_dir_label = ttk.Label(output_dir_container)
-        output_dir_label.configure(font="TkCaptionFont",justify="right",text='Output Directory:')
+        output_dir_label.configure(font="TkCaptionFont", justify="right", text='Output Directory:')
         output_dir_label.pack(anchor="w", expand=False, fill="x", side="top")
         create_spacer(links_frame, height=20, width=200, side="top")
 
@@ -186,19 +201,19 @@ class MainApp:
         advanced_frame1 = ttk.Frame(advanced_options_frame)
         advanced_frame1.configure(height=100)
 
-        restirct_filenames_checkbox = ttk.Checkbutton(advanced_frame1)
-        restirct_filenames_checkbox.configure(text='Restrict Filenames')
-        restirct_filenames_checkbox.pack(anchor="w", expand=False, fill="both", side="top")
+        restrict_filenames_checkbox = ttk.Checkbutton(advanced_frame1)
+        restrict_filenames_checkbox.configure(text='Restrict Filenames', variable=self.restrict_filename_var)
+        restrict_filenames_checkbox.pack(anchor="w", expand=False, fill="both", side="top")
 
         no_mtime_checkbox = ttk.Checkbutton(advanced_frame1)
-        no_mtime_checkbox.configure(text='Dont set mtime')
+        no_mtime_checkbox.configure(text='Dont set mtime', variable=self.no_mtime_var)
         no_mtime_checkbox.pack(anchor="w", expand=False, fill="both", side="top")
 
         num_threads_label = ttk.Label(advanced_frame1)
         num_threads_label.configure(takefocus=True, text='Num Threads: ')
         num_threads_label.pack(anchor="w", fill="x", ipady=4, padx=5, side="left")
 
-        num_threads_entry = ttk.Entry(advanced_frame1)
+        num_threads_entry = ttk.Entry(advanced_frame1, textvariable=self.num_threads_var)
         num_threads_entry.configure(validate="key", width=5)
         num_threads_entry.pack(anchor="e", side="right")
 
@@ -212,7 +227,7 @@ class MainApp:
         max_rate_label.pack(anchor="w", fill="x", ipady=4, padx=5, pady=5, side="left")
 
         max_rate_entry = ttk.Entry(advanced_frame2)
-        max_rate_entry.configure(width=5)
+        max_rate_entry.configure(width=5, textvariable=self.max_rate_var)
         max_rate_entry.pack(anchor="e", pady=5, side="right")
 
         advanced_frame2.pack(anchor="w", fill="x", side="top")
@@ -334,7 +349,7 @@ class MainApp:
         sacad_cover_name_entry.pack(anchor="nw", expand=False, fill="x", padx=5, side="left")
 
         use_sacad_frame_2.pack(anchor="s", fill="x", side="bottom")
-        use_sacad_frame_2.pack_propagate(0)
+        use_sacad_frame_2.pack_propagate(False)
         use_sacad_container.pack(anchor="n", expand=False, fill="both", padx=20, pady=10, side="left")
 
         post_processing_container.pack(anchor="n", expand=True, fill="both", side="left")
@@ -353,8 +368,8 @@ class MainApp:
         custom_args_label.configure(font="TkDefaultFont", justify="right", text='Enter custom command line arguments:')
         custom_args_label.pack(anchor="w", expand=False, fill="x", padx=5, pady=20, side="top")
 
-        custom_args_entry = ttk.Entry(custom_args_frame)
-        custom_args_entry.pack(anchor="w", fill="both", padx=0, pady=10, side="top")
+        self.custom_args_entry = ttk.Entry(custom_args_frame)
+        self.custom_args_entry.pack(anchor="w", fill="both", padx=0, pady=10, side="top")
 
         custom_args_frame.pack(anchor="w", expand=False, fill="x", padx=15, pady=18, side="top")
         custom_args_container.pack(anchor="w", fill="both", side="top")
@@ -432,7 +447,7 @@ class MainApp:
         Thread(
             target=self.start_download, args=(self.links_entry.get(), self.get_options(), self.log_widget), daemon=True).start()
 
-    def start_download(self, file_path, options, log_widget):
+    def start_download(self, file_path, options):
         with open(file_path, 'r') as file:
             urls = file.readlines()
         output_path = options['output_path'].rstrip('/') + '/' if options['output_path'] else ""
@@ -453,8 +468,15 @@ class MainApp:
                     command += ' --restrict-filenames'
                 if options['no_mtime']:
                     command += ' --no-mtime'
-                if options['no_mtime']:
-                    command += ' --no-mtime'
+                if options['num_threads']:
+                    command += f' -N {options["num_threads"]}'
+                else:
+                    command += f' -N 1'
+                if options['max_rate']:
+                    try:
+                        return float(self.max_rate_var.get())
+                    except ValueError:
+                        return self.max_rate_var
 
                 cookies_path = options['cookies']
                 if cookies_path:
@@ -481,14 +503,13 @@ class MainApp:
                 random_sleep_time = random.uniform(0.2, 2)
                 time.sleep(random_sleep_time)
 
-
         # Wait for all downloads to complete
         for process in download_processes:
             process.wait()
 
         if options['strip_id3'] or options['append_to_albumartist']:
             self.update_log(f"Output path is set to: {output_path}")
-            self.process_directory(output_path, log_widget)
+            self.process_directory(output_path)
         if options['sacad']:
             self.update_log(f"Running sacad_r with cover resolution {self.resolution.get()}")
             default_file_name = "folder.jpg"  # Assuming this is your default file name
@@ -507,17 +528,17 @@ class MainApp:
             self.logo_label.configure(image=self.img_logo_dark)
             self.blurb_label.configure(image=self.img_blurb_dark)
 
-    def process_directory(self, directory_path, log_widget):
+    def process_directory(self, directory_path):
         self.update_log(f"Starting to process directory: {directory_path}")
         found_files = False
-        for root, dirs, files in os.walk(directory_path):
+        for current_dir, dirs, files in os.walk(directory_path):
             for file in files:
                 found_files = True
                 self.update_log(f"Found file: {file}")
-                file_path = os.path.join(root, file)
+                file_path = os.path.join(current_dir, file)
                 _, ext = os.path.splitext(file_path)
                 if ext.lower() in ['.m4a', '.mp4', '.opus']:
-                    self.update_and_clean_tags(file_path, tags_to_remove)
+                    self.update_and_clean_tags(file_path, list_tags_to_remove)
         if not found_files:
             self.update_log("No files found in directory.")
 
@@ -539,11 +560,10 @@ class MainApp:
             self.output_dir_entry.delete(0, tk.END)
             self.output_dir_entry.insert(0, directory)
 
-
     def update_and_clean_tags(self, input_file, tags_to_remove):
         _, ext = os.path.splitext(input_file)
         ext = ext.lower()
-        #print(f"Processing file: {input_file}")  # Debugging
+        # print(f"Processing file: {input_file}")  # Debugging
         album_artist_field = 'album_artist' if ext in ['.m4a', '.mp4'] else 'ALBUMARTIST' if ext == '.opus' else None
 
         if not album_artist_field:
@@ -611,30 +631,33 @@ class MainApp:
 
             'restrict_filenames': self.restrict_filename_var.get(),
             'no_mtime': self.no_mtime_var.get(),
-            #num_threads
-            #max_rate
+            'num_threads': self.num_threads_var.get(),
+            'max_rate': self.max_rate_var.get(),
 
             'strip_id3': self.strip_id3_var.get(),
             'append_to_albumartist': self.append_to_albumartist_var.get(),
             'meta_data': self.meta_data_var.get(),
             'use_youtube': self.use_youtube_var.get(),
             'use_yt_albumart': self.album_art_var.get(),
-            #'yt_albumart_name':
+            # 'yt_albumart_name':
 
             'use_sacad': self.use_sacad_var.get(),
             'use_sacad_albumart': self.sacad_dl_albumart.get(),
             'resolution': self.resolution.get(),
 
-            'custom_args': self.entry14.get(),
+            'custom_args': self.custom_args_entry.get()
 
         }
+
     def update_log(self, message):
         cleaned_message = message.rstrip('\n').rstrip('\r') + "\n"
         # Using lambda to ensure thread-safe updates to the Tkinter widget
         self.master.after(0, lambda: self.log_widget.insert(tk.END, cleaned_message))
         self.master.after(0, lambda: self.log_widget.see(tk.END))
+
     def run(self):
         self.mainwindow.mainloop()
+
 
 if __name__ == "__main__":
     root = tk.Tk()
