@@ -30,20 +30,27 @@ class MainApp:
         self.strip_id3_var = tk.BooleanVar(value=False)
         self.append_to_albumartist_var = tk.BooleanVar(value=False)
         self.meta_data_var = tk.BooleanVar(value=True)
+
         # Post Processing
         self.use_youtube_var = tk.BooleanVar(value=False)
+
         self.yt_embed_albumart_var = tk.BooleanVar(value=False)
         self.yt_extract_albumart_var = tk.BooleanVar(value=False)
+        self.yt_cover_name_var = tk.StringVar(value="folder.jpg")
 
         self.use_sacad_var = tk.BooleanVar(value=False)
-        self.sacad_dl_albumart = tk.BooleanVar(value=False)
-        self.sacad_embed_albumart = tk.BooleanVar(value=False)
+
+        self.sacad_dl_albumart_var = tk.BooleanVar(value=False)
+        self.sacad_embed_albumart_var = tk.BooleanVar(value=False)
+        self.sacad_cover_name_var = tk.StringVar(value="folder.jpg")
 
         self.album_art_var = tk.BooleanVar(value=False)
         self.resolution = tk.StringVar(value="1000")
 
         self.num_threads_var = tk.StringVar(value="1")
-        self.max_rate_var = tk.StringVar(value="1250000")
+
+        self.default_rate_in_mb = 10  # Default rate as commonly understood by users
+        self.max_rate_var = tk.StringVar(value=f"{self.default_rate_in_mb}")
 
         mainwindow = ttk.Frame(master)
         mainwindow.configure(height=750, width=650)
@@ -70,8 +77,8 @@ class MainApp:
         self.blurb_label.configure(image=self.img_blurb_light, text='blurb_label')  # Start with light theme image
         self.blurb_label.pack(anchor="w", pady=20, side="left")
 
-        toggle_theme_btn = ttk.Button(self.main_frame, text='🌜  🔆', command=self.toggle_theme)
-        toggle_theme_btn.pack(anchor="n", side="right", padx=20, pady=10)
+        self.toggle_theme_btn = ttk.Button(self.main_frame, text='🔆', command=self.toggle_theme)
+        self.toggle_theme_btn.pack(anchor="n", side="right", padx=20, pady=10)
         self.main_frame.pack(anchor="nw", fill="x", side="top")
 
         def create_spacer(frame, height: int = 10, width: int = 200,
@@ -100,7 +107,7 @@ class MainApp:
         # Links File
         self.links_entry = ttk.Entry(links_container)
         self.links_entry.pack(anchor="w", expand=True, fill="x", padx=0, pady=10, side="left")
-        default_links_path = "/home/init/Music/Youtube/yt-dl-gui/test.txt"
+        default_links_path = "/home/init/Downloads/test.txt"
 
         self.links_entry.insert(0, default_links_path)
         self.links_browse = ttk.Button(links_container, text='Browse', command=self.browse_file)  # Changed command to self.browse_file
@@ -129,6 +136,7 @@ class MainApp:
         paths_frame = ttk.Frame(links_options_notebook)
 
         # Output Directory
+        default_output_path = "/home/init/Downloads/test/"
         output_dir_container = ttk.Frame(paths_frame)
         output_dir_container.configure(width=200)
 
@@ -140,6 +148,7 @@ class MainApp:
         create_spacer(links_frame, height=20, width=200, side="top")
 
         self.output_dir_entry = ttk.Entry(output_dir_container)
+        self.output_dir_entry.insert(0, default_output_path)
         self.output_dir_entry.pack(anchor="w", expand=True, fill="x", padx=0, pady=10, side="left")
         self.output_dir_browse = ttk.Button(output_dir_container)
         self.output_dir_browse.configure(text='Browse', command=self.browse_output_path)
@@ -223,7 +232,7 @@ class MainApp:
         advanced_frame2.configure(height=200, width=200)
 
         max_rate_label = ttk.Label(advanced_frame2)
-        max_rate_label.configure(justify="right", text='Max Rate: ')
+        max_rate_label.configure(justify="right", text='Max Rate (MB): ')
         max_rate_label.pack(anchor="w", fill="x", ipady=4, padx=5, pady=5, side="left")
 
         max_rate_entry = ttk.Entry(advanced_frame2)
@@ -248,15 +257,15 @@ class MainApp:
         tag_options_container.configure(height=110)
 
         clean_id3_checkbox = ttk.Checkbutton(tag_options_container)
-        clean_id3_checkbox.configure(text='Clean ID3 Tags')
+        clean_id3_checkbox.configure(text='Clean ID3 Tags', variable=self.strip_id3_var)
         clean_id3_checkbox.pack(anchor="w", expand=False, fill="both", side="top")
 
         artist_albumartist_checkbox = ttk.Checkbutton(tag_options_container)
-        artist_albumartist_checkbox.configure(text='Artist > AlbumArtist')
+        artist_albumartist_checkbox.configure(text='Artist > AlbumArtist', variable=self.append_to_albumartist_var)
         artist_albumartist_checkbox.pack(anchor="n", fill="x", side="top")
 
         embed_metadata_checkbox = ttk.Checkbutton(tag_options_container)
-        embed_metadata_checkbox.configure(text='Embed Metadata')
+        embed_metadata_checkbox.configure(text='Embed Metadata', variable=self.meta_data_var)
         embed_metadata_checkbox.pack(anchor="w", side="top")
 
         tag_options_container.pack(anchor="n", expand=True, fill="both", side="left")
@@ -268,26 +277,26 @@ class MainApp:
         post_processing_container = ttk.Frame(settings_notebook)
         post_processing_container.configure(borderwidth=1, width=600)
 
-        use_youtube_container = ttk.Frame(post_processing_container)
-        use_youtube_container.configure(height=100, width=300)
+        self.use_youtube_container = ttk.Frame(post_processing_container)
+        self.use_youtube_container.configure(height=100, width=300)
 
-        use_youtube_checkbox = ttk.Checkbutton(use_youtube_container)
-        use_youtube_checkbox.configure(text='Use Youtube For Covers')
+        use_youtube_checkbox = ttk.Checkbutton(self.use_youtube_container)
+        use_youtube_checkbox.configure(text='Use Youtube For Covers', variable=self.use_youtube_var, command=self.toggle_sacad_frame)
         use_youtube_checkbox.pack(anchor="w", side="top")
 
-        use_youtube_separator = ttk.Separator(use_youtube_container)
+        use_youtube_separator = ttk.Separator(self.use_youtube_container)
         use_youtube_separator.configure(orient="horizontal")
         use_youtube_separator.pack(anchor="n", fill="x", padx=10, pady=10, side="top")
 
-        use_youtube_frame = ttk.Frame(use_youtube_container)
+        use_youtube_frame = ttk.Frame(self.use_youtube_container)
         use_youtube_frame.configure(height=200)
 
         yt_embed_albumart_checkbox = ttk.Checkbutton(use_youtube_frame)
-        yt_embed_albumart_checkbox.configure(takefocus=False, text='Embed AlbumArt')
+        yt_embed_albumart_checkbox.configure(takefocus=False, text='Embed AlbumArt', variable=self.yt_embed_albumart_var)
         yt_embed_albumart_checkbox.pack(anchor="w", fill="x", side="top")
 
         yt_extract_albumart_checkbox = ttk.Checkbutton(use_youtube_frame)
-        yt_extract_albumart_checkbox.configure(text='Extract AlbumArt')
+        yt_extract_albumart_checkbox.configure(text='Extract AlbumArt', variable=self.yt_extract_albumart_var)
         yt_extract_albumart_checkbox.pack(anchor="w", fill="x", side="top")
 
         yt_albumart_name_label = ttk.Label(use_youtube_frame)
@@ -295,49 +304,49 @@ class MainApp:
         yt_albumart_name_label.pack(anchor="n", ipady=4, pady=5, side="left")
 
         yt_albumart_name_entry = ttk.Entry(use_youtube_frame)
-        yt_albumart_name_entry.configure(justify="right", width=10)
+        yt_albumart_name_entry.configure(justify="right", width=10, textvariable=self.yt_cover_name_var)
         yt_albumart_name_entry.pack(anchor="n", padx=5, pady=5, side="left")
 
         use_youtube_frame.pack(anchor="w", fill="both", side="top")
-        use_youtube_container.pack(anchor="n", expand=False, fill="both", padx=10, pady=10, side="left")
+        self.use_youtube_container.pack(anchor="n", expand=False, fill="both", padx=10, pady=10, side="left")
 
-        use_sacad_container = ttk.Frame(post_processing_container)
-        use_sacad_container.configure(height=200, width=300)
+        self.use_sacad_container = ttk.Frame(post_processing_container)
+        self.use_sacad_container.configure(height=200, width=300)
 
-        use_sacad_checkbox = ttk.Checkbutton(use_sacad_container)
-        use_sacad_checkbox.configure(text='Use Sacad For Covers')
+        use_sacad_checkbox = ttk.Checkbutton(self.use_sacad_container)
+        use_sacad_checkbox.configure(text='Use Sacad For Covers', variable=self.use_sacad_var, command=self.toggle_youtube_frame)
         use_sacad_checkbox.pack(anchor="w", side="top")
 
-        use_sacad_separator = ttk.Separator(use_sacad_container)
+        use_sacad_separator = ttk.Separator(self.use_sacad_container)
         use_sacad_separator.configure(orient="horizontal")
 
         use_sacad_separator.pack(anchor="n", expand=False, fill="x", padx=10, pady=10, side="top")
 
-        use_sacad_frame = ttk.Frame(use_sacad_container)
+        use_sacad_frame = ttk.Frame(self.use_sacad_container)
         use_sacad_frame.configure(height=100)
 
         sacad_frame_1 = ttk.Frame(use_sacad_frame)
         sacad_frame_1.configure(height=200, width=200)
 
         sacad_download_cover_checkbox = ttk.Checkbutton(sacad_frame_1)
-        sacad_download_cover_checkbox.configure(takefocus=False, text='Download Cover')
+        sacad_download_cover_checkbox.configure(takefocus=False, text='Download Cover', variable=self.sacad_dl_albumart_var)
         sacad_download_cover_checkbox.pack(anchor="n", expand=False, fill="x", side="top")
 
         sacad_embed_cover_checkbox = ttk.Checkbutton(sacad_frame_1)
-        sacad_embed_cover_checkbox.configure(text='Embed Cover')
+        sacad_embed_cover_checkbox.configure(text='Embed Cover', variable=self.sacad_embed_albumart_var)
         sacad_embed_cover_checkbox.pack(anchor="n", fill="x", side="top")
 
         sacad_resolution_label = ttk.Label(sacad_frame_1)
         sacad_resolution_label.configure(text='Resolution: ', width=10)
         sacad_resolution_label.pack(anchor="nw", ipady=4, pady=5, side="left")
         sacad_resolution_entry = ttk.Entry(sacad_frame_1)
-        sacad_resolution_entry.configure(justify="right", width=10)
+        sacad_resolution_entry.configure(justify="right", width=10, textvariable=self.resolution)
         sacad_resolution_entry.pack(anchor="nw", fill="x", padx=5, pady=5, side="left")
 
         sacad_frame_1.pack(anchor="n", fill="x", side="left")
 
         use_sacad_frame.pack(anchor="n", fill="x", side="top")
-        use_sacad_frame_2 = ttk.Frame(use_sacad_container)
+        use_sacad_frame_2 = ttk.Frame(self.use_sacad_container)
         use_sacad_frame_2.configure(height=200, width=200)
 
         sacad_cover_name_label = ttk.Label(use_sacad_frame_2)
@@ -345,12 +354,12 @@ class MainApp:
         sacad_cover_name_label.pack(anchor="n", fill="x", ipady=4, side="left")
 
         sacad_cover_name_entry = ttk.Entry(use_sacad_frame_2)
-        sacad_cover_name_entry.configure(justify="right", width=10)
+        sacad_cover_name_entry.configure(justify="right", width=10, textvariable=self.sacad_cover_name_var)
         sacad_cover_name_entry.pack(anchor="nw", expand=False, fill="x", padx=5, side="left")
 
         use_sacad_frame_2.pack(anchor="s", fill="x", side="bottom")
         use_sacad_frame_2.pack_propagate(False)
-        use_sacad_container.pack(anchor="n", expand=False, fill="both", padx=20, pady=10, side="left")
+        self.use_sacad_container.pack(anchor="n", expand=False, fill="both", padx=20, pady=10, side="left")
 
         post_processing_container.pack(anchor="n", expand=True, fill="both", side="left")
         settings_notebook.add(post_processing_container, text='Post Processing')
@@ -447,7 +456,7 @@ class MainApp:
         Thread(
             target=self.start_download, args=(self.links_entry.get(), self.get_options(), self.log_widget), daemon=True).start()
 
-    def start_download(self, file_path, options):
+    def start_download(self, file_path, options, log_widget):
         with open(file_path, 'r') as file:
             urls = file.readlines()
         output_path = options['output_path'].rstrip('/') + '/' if options['output_path'] else ""
@@ -459,36 +468,50 @@ class MainApp:
                 command = 'yt-dlp --progress --newline'
                 if options['no_transcode']:
                     command += ' -x'
+
                 if options['output_format']:
                     command += f' -o "{output_path}%(playlist_title)s/%(playlist_autonumber)02d. %(title)s.%(ext)s"'
+
                 if options['random_sleep']:
                     random_sleep_time = random.uniform(0.2, 2)
                     command += f' --sleep-interval {random_sleep_time}'
+
                 if options['restrict_filenames']:
                     command += ' --restrict-filenames'
+
                 if options['no_mtime']:
                     command += ' --no-mtime'
+
                 if options['num_threads']:
                     command += f' -N {options["num_threads"]}'
                 else:
                     command += f' -N 1'
+
                 if options['max_rate']:
                     try:
-                        return float(self.max_rate_var.get())
+                        # Convert the rate to bytes and then to an integer
+                        rate_in_bytes = int(float(options['max_rate']) * 1000000)
                     except ValueError:
-                        return self.max_rate_var
+                        self.update_log("Warning: Invalid maximum rate provided. Using default.")
+                        rate_in_bytes = int(self.default_rate_in_mb * 1000000)  # Ensure this is also an integer
+
+                    command += f' --limit-rate {rate_in_bytes}'
+
+                if options['use_yt_albumart']:
+                    command += ' --embed-thumbnail --ppa "ThumbnailsConvertor+FFmpeg_o:-c:v mjpeg -vf crop=\\\'if(gt(ih,iw),iw,ih):if(gt(iw,ih),ih,iw)\\\'"'
 
                 cookies_path = options['cookies']
+
                 if cookies_path:
                     command += f' --cookies {shlex.quote(cookies_path)}'
 
                 if options['meta_data']:
-                    command += ' --add-metadata --embed-metadata --extract-audio --embed-thumbnail'
+                    command += ' --add-metadata --embed-metadata --extract-audio'
                     command += ' --parse-metadata "playlist_index:%(track_number)s"'
-                if options['album_art']:
-                    command += ' --ppa "ThumbnailsConvertor+FFmpeg_o:-c:v mjpeg -vf crop=\\\'if(gt(ih,iw),iw,ih):if(gt(iw,ih),ih,iw)\\\'"'
+
                 if options['custom_args']:
                     command += f' {options["custom_args"]}'
+
                 command += f' {shlex.quote(url)}'
 
                 self.update_log("Executing command: " + command + "\n")
@@ -507,13 +530,17 @@ class MainApp:
         for process in download_processes:
             process.wait()
 
+        # after download loop finishes, perform file ops and cover downloads
         if options['strip_id3'] or options['append_to_albumartist']:
             self.update_log(f"Output path is set to: {output_path}")
             self.process_directory(output_path)
-        if options['sacad']:
+
+        if options['use_sacad_albumart']:
             self.update_log(f"Running sacad_r with cover resolution {self.resolution.get()}")
-            default_file_name = "folder.jpg"  # Assuming this is your default file name
-            self.run_sacad(output_path, default_file_name)
+            self.run_sacad(output_path, self.sacad_cover_name_var.get())
+
+        if options['embed_albumart_sacad']:
+            self.sacad_embed_albumart(output_path, self.sacad_cover_name_var.get())
 
     def toggle_theme(self):
         current_theme = svc_ttk.get_theme()
@@ -522,11 +549,15 @@ class MainApp:
             # Update label images for light theme
             self.logo_label.configure(image=self.img_logo_light)
             self.blurb_label.configure(image=self.img_blurb_light)
+            # Change button text to indicate light theme is active
+            self.toggle_theme_btn.configure(text='🔆')  # Assuming you store the button in self.toggle_theme_btn
         else:
             svc_ttk.set_theme("dark")
             # Update label images for dark theme
             self.logo_label.configure(image=self.img_logo_dark)
             self.blurb_label.configure(image=self.img_blurb_dark)
+            # Change button text to indicate dark theme is active
+            self.toggle_theme_btn.configure(text='🌙')  # Assuming you store the button in self.toggle_theme_btn
 
     def process_directory(self, directory_path):
         self.update_log(f"Starting to process directory: {directory_path}")
@@ -620,6 +651,52 @@ class MainApp:
         except FileNotFoundError:
             self.update_log("Sacad not found. Please install via 'pip install sacad'")
 
+    def sacad_embed_albumart(self, input_folder, name):
+
+        for root_dir, dirs, files in os.walk(input_folder):
+            for file in files:
+                if file.endswith(('.m4a', '.mp4', '.mp3', '.opus')):  # Assuming AtomicParsley supports your needs for these formats
+                    audio_path = os.path.join(root_dir, file)
+                    # Construct the command
+                    command = ['AtomicParsley', input_folder, '--artwork', name, '--overWrite']
+                    # Execute the command
+                    subprocess.run(command, check=True)
+                    print(f"Artwork added to {audio_path} with AtomicParsley.")
+
+    def enable_widget(self, childlist):
+        for child in childlist:
+            try:
+                child.configure(state='normal')
+            except tk.TclError:
+                pass  # Ignore if the widget doesn't support the state option
+
+    def disable_widget(self, childlist):
+        for child in childlist:
+            try:
+                child.configure(state='disabled')
+            except tk.TclError:
+                pass  # Ignore if the widget doesn't support the state option
+
+    def recursive_set_state(self, container, state):
+        for widget in container.winfo_children():
+            try:
+                widget.configure(state=state)
+            except tk.TclError:
+                pass  # Ignore widgets that do not support the state option
+            self.recursive_set_state(widget, state)  # Recurse into child widgets
+
+    def toggle_sacad_frame(self):
+        if self.use_youtube_var.get():
+            self.recursive_set_state(self.use_sacad_container, 'disabled')
+        else:
+            self.recursive_set_state(self.use_sacad_container, 'normal')
+
+    def toggle_youtube_frame(self):
+        if self.use_sacad_var.get():
+            self.recursive_set_state(self.use_youtube_container, 'disabled')
+        else:
+            self.recursive_set_state(self.use_youtube_container, 'normal')
+
     def get_options(self):
         return {
             'cookies': self.cookies_entry.get(),
@@ -638,11 +715,12 @@ class MainApp:
             'append_to_albumartist': self.append_to_albumartist_var.get(),
             'meta_data': self.meta_data_var.get(),
             'use_youtube': self.use_youtube_var.get(),
-            'use_yt_albumart': self.album_art_var.get(),
-            # 'yt_albumart_name':
+            'use_yt_albumart': self.yt_embed_albumart_var.get(),
 
             'use_sacad': self.use_sacad_var.get(),
-            'use_sacad_albumart': self.sacad_dl_albumart.get(),
+            'use_sacad_albumart': self.sacad_dl_albumart_var.get(),
+            'embed_albumart_sacad': self.sacad_embed_albumart_var.get(),
+
             'resolution': self.resolution.get(),
 
             'custom_args': self.custom_args_entry.get()
