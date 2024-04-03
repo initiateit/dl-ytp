@@ -526,7 +526,7 @@ class MainApp:
                 random_sleep_time = random.uniform(0.2, 2)
                 time.sleep(random_sleep_time)
 
-        # Wait for all downloads to complete
+        # Wait for all downloads
         for process in download_processes:
             process.wait()
 
